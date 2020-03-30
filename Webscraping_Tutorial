@@ -1,0 +1,38 @@
+from password import password,email_from,email_to
+from urls import urls
+from headers import headers
+from bs4 import BeautifulSoup
+import requests
+from pprint import pprint
+from email.mime.multipart import MIMEMultipart # you can use email_to as well pip install email-to
+from email.mime.text import MIMEText
+import smtplib
+for url in urls:
+    headers=headers
+    response=requests.get(url,headers=headers,timeout=10)
+    soup=BeautifulSoup(response.text,'html.parser')
+    pprint([type(item) for item in list(soup.children)])
+    pprint(soup.find_all(class_='stock'))
+    d=[div.attrs['data-i18n'] for div in soup.find_all(class_='stock') if div.has_attr('data-i18n')]
+    pprint(d)
+    string=d[0]
+    pprint(string)
+    import json
+    res=json.loads(string)
+    print(res)
+    print(res['countInStock'])
+    message='product status'+' '+url+' '+res['countInStock']
+    msg=MIMEMultipart()
+    password=password
+    msg['From']=email_from
+    msg['To']=email_to
+    msg['Subject']='product info'
+    msg.attach(MIMEText(message,'plain'))
+    server=smtplib.SMTP('smtp.gmail.com: 587',None,30)
+    server.ehlo()
+    server.starttls()
+    server.login(msg['From'],password)
+    server.sendmail(msg['From'],msg['To'],msg.as_string())
+    server.quit()
+    print('Message Sent')
+    
